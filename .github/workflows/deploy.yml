@@ -20,7 +20,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftps   # เพิ่ม protocol
         port: 21        # เพิ่ม port
-        server-dir: domains/kamnuantech.com/spin.kamnuantech.com/public_html/
+        server-dir: domains/spin.kamnuantech.com/public_html/
         dangerous-clean-slate: true   # ล้างไฟล์เก่าก่อน upload
         timeout: 60000   # เพิ่มเวลา timeout
         exclude: |
