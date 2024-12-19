@@ -15,8 +15,8 @@ jobs:
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
-        server: kamnuantech.com        # แก้เป็นโดเมนหลัก
-        username: spinkitti             # ใช้แค่ username อย่างเดียว
+        server: kamnuantech.com
+        username: spinkitti@kamnuantech.com  # ต้องใส่ @kamnuantech.com
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: /domains/spin.kamnuantech.com/public_html/
         exclude: |
