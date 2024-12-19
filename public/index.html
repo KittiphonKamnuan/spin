@@ -1,0 +1,39 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสุ่มรางวัล</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Prize Wheel Section -->
+        <div class="card">
+            <h2 class="card-title">วงล้อสุ่มของรางวัล</h2>
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div class="wheel-center"></div>
+            </div>
+            <button id="spinButton" class="button" disabled>สุ่มรางวัล</button>
+            <div id="prizeResult" class="prize-result"></div>
+        </div>
+
+        <!-- Admin Section -->
+        <div class="card">
+            <h2 class="card-title">ส่วนควบคุมสำหรับเจ้าของร้าน</h2>
+            <button id="generateButton" class="button">สร้างลิงก์ใหม่</button>
+            <div id="linkContainer" class="link-container" style="display: none;">
+                <div id="generatedLink"></div>
+                <div id="timer" class="timer"></div>
+                <div id="qrCode" class="qr-code"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
