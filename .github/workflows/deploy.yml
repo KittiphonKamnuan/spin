@@ -1,4 +1,4 @@
-name: Deploy to cPanel
+name: Deploy to DirectAdmin
 on:
   push:
     branches: [ main ]
@@ -18,4 +18,13 @@ jobs:
         server: spin.kamnuantech.com
         username: spinkitti
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /spin.kamnuantech.com/public_html/
+        server-dir: /domains/spin.kamnuantech.com/public_html/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.env
+          **/package-lock.json
+          **/.htpasswd/**
+          **/private_html/**
+          **/cgi-bin/**
