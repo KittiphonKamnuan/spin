@@ -1,0 +1,35 @@
+name: Deploy to Hosting
+
+on:
+  push:
+    branches: [ main ]  # หรือ master แล้วแต่ branch หลักของคุณ
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+        
+    - name: Install Dependencies
+      run: npm install
+        
+    # ถ้ามีขั้นตอน build
+    - name: Build
+      run: npm run build
+
+    # Deploy ไปยัง hosting ผ่าน FTP
+    - name: 📂 Deploy to Hosting
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftp
+        local-dir: ./ # หรือ ./dist/ ถ้ามีการ build
+        server-dir: /public_html/spin.kamnuantech.com/
