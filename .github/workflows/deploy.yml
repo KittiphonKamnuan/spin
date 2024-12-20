@@ -24,4 +24,4 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /domains/spin.kamnuantech.com/
+        server-dir: /domains/spin.kamnuantech.com/public_html/
