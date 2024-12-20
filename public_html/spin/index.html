@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="วงล้อสุ่มรางวัลพิเศษสำหรับลูกค้า KAMNUAN TECH">
+    <title>สุ่มรางวัลพิเศษ | KAMNUAN TECH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/spin/spin.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>กำลังโหลด...</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="title">สุ่มรางวัลพิเศษ</h1>
+                <p class="subtitle">ลุ้นรับรางวัลมากมาย!</p>
+            </div>
+
+            <!-- Prize List -->
+            <div class="prize-list">
+                <h2 class="section-title">รายการของรางวัล</h2>
+                <div class="prize-grid">
+                    <div class="prize-item">เลือกได้ทั้งร้าน 1 เมนู</div>
+                    <div class="prize-item">ลด 30 บาท</div>
+                    <div class="prize-item">ลด 10%</div>
+                    <div class="prize-item">ลด 5%</div>
+                    <div class="prize-item">ลด 3%</div>
+                    <div class="prize-item">ฟรีวิป 1 จุก</div>
+                    <div class="prize-item">ฟรีมุก 1 ตัก</div>
+                    <div class="prize-item">ฟรีชาเขียว</div>
+                    <div class="prize-item">ฟรีชาไทย</div>
+                    <div class="prize-item">ฟรีชามะนาว</div>
+                </div>
+            </div>
+
+            <!-- Wheel Section -->
+            <div class="wheel-section">
+                <div class="wheel-container">
+                    <div class="pointer"></div>
+                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                    <div class="wheel-center"></div>
+                </div>
+
+                <button id="spinButton" class="button button-primary">
+                    <span class="button-text">สุ่มรางวัล</span>
+                    <span class="button-loading" style="display: none;">กำลังสุ่ม...</span>
+                </button>
+            </div>
+
+            <!-- Result Section -->
+            <div id="prizeResult" class="prize-result">
+                <div class="result-content">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'%3E%3Cpath fill='%234CAF50' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E" 
+                         alt="success" class="success-icon">
+                    <h2 class="result-title">🎉 ยินดีด้วย!</h2>
+                    <div id="prizeName" class="prize-name"></div>
+                    <p class="result-instruction">กรุณาแสดงหน้าจอนี้กับพนักงานเพื่อรับรางวัล</p>
+                    <div class="timestamp">
+                        สุ่มเมื่อ: <span id="spinTimestamp"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message">
+                <div class="error-content"></div>
+                <button onclick="window.location.reload()" class="button button-secondary">
+                    ลองใหม่อีกครั้ง
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 KAMNUAN TECH. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="/spin/spin.js"></script>
+</body>
+</html>
