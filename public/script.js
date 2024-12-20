@@ -1,7 +1,5 @@
-// Constants and configurations
-const API_BASE_URL = 'https://spin.kamnuantech.com';
-
-const PRIZES = [
+// Prize configuration
+const prizes = [
     { name: 'เลือกได้ทั้งร้าน 1 เมนู', color: '#FF6B6B' },
     { name: 'ลด 30 บาท', color: '#4ECDC4' },
     { name: 'ลด 10%', color: '#45B7D1' },
@@ -14,49 +12,44 @@ const PRIZES = [
     { name: 'ฟรีชามะนาว', color: '#F49AC2' }
 ];
 
+// Wheel class for handling the prize wheel
 class PrizeWheel {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.isSpinning = false;
-        this.startTime = null;
         this.currentRotation = 0;
-        this.targetRotation = 0;
-        this.spinDuration = 4000; // 4 seconds
         this.init();
     }
 
     init() {
         this.drawWheel();
-        this.setupEventListeners();
     }
 
     drawWheel() {
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         const radius = Math.min(centerX, centerY) - 10;
-        const sliceAngle = (2 * Math.PI) / PRIZES.length;
+        const sliceAngle = (2 * Math.PI) / prizes.length;
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw slices
-        PRIZES.forEach((prize, index) => {
+        prizes.forEach((prize, index) => {
             const startAngle = index * sliceAngle;
             const endAngle = startAngle + sliceAngle;
 
+            // Draw slice
             this.ctx.beginPath();
             this.ctx.moveTo(centerX, centerY);
             this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
             this.ctx.closePath();
-
-            // Fill and stroke
             this.ctx.fillStyle = prize.color;
             this.ctx.fill();
             this.ctx.strokeStyle = '#FFFFFF';
             this.ctx.lineWidth = 2;
             this.ctx.stroke();
 
-            // Add text
+            // Draw text
             this.ctx.save();
             this.ctx.translate(centerX, centerY);
             this.ctx.rotate(startAngle + sliceAngle / 2);
@@ -66,191 +59,161 @@ class PrizeWheel {
             this.ctx.fillText(prize.name, radius - 20, 5);
             this.ctx.restore();
         });
-
-        // Draw center circle
-        this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
-        this.ctx.fillStyle = '#FF0000';
-        this.ctx.fill();
-        this.ctx.stroke();
     }
 
-    setupEventListeners() {
-        const spinButton = document.getElementById('spinButton');
-        if (spinButton) {
-            spinButton.addEventListener('click', () => this.startSpin());
-        }
+    rotate(degrees) {
+        this.currentRotation = degrees;
+        this.canvas.style.transform = `rotate(${degrees}deg)`;
+    }
+}
+
+// Auth functions
+function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('loginError');
+
+    if (!username || !password) {
+        errorDiv.textContent = 'กรุณากรอกข้อมูลให้ครบ';
+        errorDiv.style.display = 'block';
+        return;
     }
 
-    async startSpin() {
-        if (this.isSpinning) return;
-
-        const spinButton = document.getElementById('spinButton');
-        spinButton.disabled = true;
-
-        try {
-            // Get spin ID from URL
-            const urlParts = window.location.pathname.split('/');
-            const spinId = urlParts[urlParts.length - 1];
-
-            // Call API to get prize
-            const response = await fetch(`${API_BASE_URL}/api/spin/${spinId}`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to spin');
-            }
-
-            // Find prize index
-            const prizeIndex = PRIZES.findIndex(p => p.name === data.prize);
-            
-            // Calculate rotation
-            const baseRotations = 5; // Minimum number of full rotations
-            const randomExtraRotations = Math.random() * 2; // 0 to 2 extra rotations
-            const sliceAngle = 360 / PRIZES.length;
-            const prizeAngle = (sliceAngle * prizeIndex) + Math.random() * (sliceAngle * 0.8);
-            
-            this.targetRotation = (baseRotations + randomExtraRotations) * 360 + prizeAngle;
-            this.isSpinning = true;
-            this.startTime = null;
-            
-            requestAnimationFrame(this.animate.bind(this));
-
-        } catch (error) {
-            console.error('Spin error:', error);
-            this.showError(error.message);
-            spinButton.disabled = false;
-        }
+    if (username === 'admin' && password === '12345678') {
+        sessionStorage.setItem('isAdminLoggedIn', 'true');
+        sessionStorage.setItem('adminUsername', username);
+        showAdminSection();
+    } else {
+        errorDiv.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+        errorDiv.style.display = 'block';
     }
+}
 
-    animate(timestamp) {
-        if (!this.startTime) this.startTime = timestamp;
-        const progress = (timestamp - this.startTime) / this.spinDuration;
+function logout() {
+    sessionStorage.removeItem('isAdminLoggedIn');
+    sessionStorage.removeItem('adminUsername');
+    window.location.reload();
+}
 
-        if (progress < 1) {
-            // Easing function for smooth deceleration
-            const easeOut = 1 - Math.pow(1 - progress, 3);
-            this.currentRotation = easeOut * this.targetRotation;
-            
-            // Apply rotation to canvas
-            this.ctx.save();
-            this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
-            this.ctx.rotate((this.currentRotation * Math.PI) / 180);
-            this.ctx.translate(-this.canvas.width / 2, -this.canvas.height / 2);
-            this.drawWheel();
-            this.ctx.restore();
+function showAdminSection() {
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('adminSection').style.display = 'block';
+    document.getElementById('adminUsername').textContent = 
+        `ผู้ดูแลระบบ: ${sessionStorage.getItem('adminUsername')}`;
+}
 
-            requestAnimationFrame(this.animate.bind(this));
+// Link generation and management
+let currentLinkTimer;
+
+function generateLink() {
+    const button = document.getElementById('generateButton');
+    button.disabled = true;
+
+    fetch('/api/generate-link', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showGeneratedLink(data);
+            startTimer(data.expiryTime);
         } else {
-            // Spinning complete
-            this.isSpinning = false;
-            this.showResult();
+            throw new Error(data.error);
         }
-    }
-
-    showResult() {
-        const resultDiv = document.getElementById('result');
-        if (resultDiv) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `<div class="prize-result">
-                ยินดีด้วย! คุณได้รับรางวัล
-                <div class="prize-name">${this.lastPrize}</div>
-            </div>`;
-        }
-    }
-
-    showError(message) {
-        const resultDiv = document.getElementById('result');
-        if (resultDiv) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `<div class="error-message">${message}</div>`;
-        }
-    }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการสร้างลิงก์');
+    })
+    .finally(() => {
+        button.disabled = false;
+    });
 }
 
-// Admin functions
-async function generateLink() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/generate-link`, {
-            method: 'POST',
-            credentials: 'include'
-        });
+function showGeneratedLink(data) {
+    const linkContainer = document.getElementById('linkContainer');
+    const generatedLink = document.getElementById('generatedLink');
+    const qrCode = document.getElementById('qrCode');
 
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.error);
+    // Clear previous QR code
+    qrCode.innerHTML = '';
 
-        // Update UI with new link
-        const linkContainer = document.getElementById('linkContainer');
-        const generatedLink = document.getElementById('generatedLink');
-        const qrCode = document.getElementById('qrCode');
+    // Create full URL
+    const fullUrl = `${window.location.origin}/spin/${data.spinId}`;
+    
+    // Show link
+    generatedLink.textContent = fullUrl;
+    linkContainer.style.display = 'block';
 
-        if (linkContainer) linkContainer.style.display = 'block';
-        if (generatedLink) generatedLink.textContent = data.link;
-
-        // Generate QR Code
-        if (qrCode) {
-            qrCode.innerHTML = '';
-            new QRCode(qrCode, {
-                text: data.link,
-                width: 128,
-                height: 128
-            });
-        }
-
-        // Start countdown timer
-        startTimer(data.expiryTime);
-
-        return data;
-    } catch (error) {
-        console.error('Error generating link:', error);
-        showError('เกิดข้อผิดพลาดในการสร้างลิงก์');
-    }
+    // Generate QR Code
+    new QRCode(qrCode, {
+        text: fullUrl,
+        width: 128,
+        height: 128
+    });
 }
 
-let timerInterval;
 function startTimer(expiryTime) {
     const timerElement = document.getElementById('timer');
-    if (!timerElement) return;
-
-    clearInterval(timerInterval);
     
-    timerInterval = setInterval(() => {
+    // Clear previous timer if exists
+    if (currentLinkTimer) {
+        clearInterval(currentLinkTimer);
+    }
+
+    currentLinkTimer = setInterval(() => {
         const now = Date.now();
         const timeLeft = Math.max(0, expiryTime - now);
 
         if (timeLeft === 0) {
-            clearInterval(timerInterval);
-            const linkContainer = document.getElementById('linkContainer');
-            if (linkContainer) linkContainer.style.display = 'none';
+            clearInterval(currentLinkTimer);
+            document.getElementById('linkContainer').style.display = 'none';
             return;
         }
 
         const minutes = Math.floor(timeLeft / 60000);
         const seconds = Math.floor((timeLeft % 60000) / 1000);
-        timerElement.textContent = `ลิงก์จะหมดอายุใน: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        timerElement.textContent = 
+            `ลิงก์จะหมดอายุใน: ${minutes}:${seconds.toString().padStart(2, '0')}`;
     }, 1000);
 }
 
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    document.body.appendChild(errorDiv);
-    setTimeout(() => errorDiv.remove(), 3000);
+function copyLink() {
+    const linkText = document.getElementById('generatedLink').textContent;
+    navigator.clipboard.writeText(linkText)
+        .then(() => {
+            const button = document.querySelector('.button-secondary');
+            button.textContent = 'คัดลอกแล้ว';
+            setTimeout(() => {
+                button.textContent = 'คัดลอกลิงก์';
+            }, 2000);
+        })
+        .catch(err => {
+            console.error('Failed to copy:', err);
+            alert('ไม่สามารถคัดลอกลิงก์ได้');
+        });
 }
 
-// Initialize wheel when DOM is loaded
+// Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize wheel
     const wheel = new PrizeWheel('wheelCanvas');
 
-    // Set up admin controls if on admin page
+    // Check authentication
+    if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+        showAdminSection();
+    }
+
+    // Add button event listeners
     const generateButton = document.getElementById('generateButton');
     if (generateButton) {
         generateButton.addEventListener('click', generateLink);
     }
+
+    // Handle enter key in login form
+    document.getElementById('password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            login();
+        }
+    });
 });

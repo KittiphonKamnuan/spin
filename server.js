@@ -1,21 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const app = express();
 const path = require('path');
 
-// Enable CORS
-app.use(cors({
-    origin: 'https://spin.kamnuantech.com',
-    methods: ['GET', 'POST'],
-    credentials: true
-}));
+const app = express();
 
 // Middleware
-app.use(express.static('public'));
+app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
-// Store active links (should be replaced with database in production)
-const activeLinks = new Map();
+// Store active spins
+const activeSpins = new Map();
 
 // Routes
 app.get('/', (req, res) => {
@@ -23,50 +18,45 @@ app.get('/', (req, res) => {
 });
 
 app.get('/spin/:id', (req, res) => {
-    const linkData = activeLinks.get(req.params.id);
-    
-    if (!linkData) {
-        res.status(404).sendFile(path.join(__dirname, 'public', 'error.html'));
-        return;
-    }
-
-    if (linkData.used) {
-        res.status(400).sendFile(path.join(__dirname, 'public', 'used.html'));
-        return;
-    }
-
-    if (Date.now() > linkData.expiryTime) {
-        activeLinks.delete(req.params.id);
-        res.status(400).sendFile(path.join(__dirname, 'public', 'expired.html'));
-        return;
-    }
-
+    const spinId = req.params.id;
+    console.log(`Accessing spin page with ID: ${spinId}`);
     res.sendFile(path.join(__dirname, 'public', 'spin.html'));
 });
 
-// API Routes
+// Generate new spin link
 app.post('/api/generate-link', (req, res) => {
     try {
-        const uniqueId = Math.random().toString(36).substr(2, 9);
-        const link = `https://spin.kamnuantech.com/spin/${uniqueId}`;
+        // Expire old active links
+        for (const [id, data] of activeSpins.entries()) {
+            if (!data.used && Date.now() <= data.expiryTime) {
+                activeSpins.delete(id);
+                console.log(`Deleted old link: ${id}`);
+            }
+        }
+
+        // Generate new link
+        const uniqueId = Math.random().toString(36).substring(7);
         const expiryTime = Date.now() + (5 * 60 * 1000); // 5 minutes
 
-        activeLinks.set(uniqueId, {
+        // Save new link
+        activeSpins.set(uniqueId, {
             used: false,
             expiryTime,
             prize: null,
-            fullLink: link,
             createdAt: new Date()
         });
 
+        console.log(`Generated new link: ${uniqueId}`);
+        console.log('Active spins:', Array.from(activeSpins.keys()));
+
         res.json({
             success: true,
-            uniqueId,
-            link,
-            expiryTime
+            spinId: uniqueId,
+            spinUrl: `/spin/${uniqueId}`
         });
+
     } catch (error) {
-        console.error('Error generating link:', error);
+        console.error('Generate link error:', error);
         res.status(500).json({
             success: false,
             error: 'เกิดข้อผิดพลาดในการสร้างลิงก์'
@@ -74,114 +64,85 @@ app.post('/api/generate-link', (req, res) => {
     }
 });
 
-app.get('/api/check-link/:id', (req, res) => {
+// Validate spin attempt
+app.post('/api/spin/:id', (req, res) => {
     try {
-        const linkData = activeLinks.get(req.params.id);
-        
-        if (!linkData) {
-            return res.json({ 
-                valid: false, 
-                message: 'ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว' 
-            });
-        }
+        const spinId = req.params.id;
+        console.log(`Spin attempt for ID: ${spinId}`);
+        console.log('Active spins:', Array.from(activeSpins.keys()));
 
-        if (linkData.used) {
-            return res.json({ 
-                valid: false, 
-                message: 'ลิงก์นี้ถูกใช้งานไปแล้ว',
-                usedAt: linkData.usedAt,
-                prize: linkData.prize 
-            });
-        }
+        // Get spin data
+        const spinData = activeSpins.get(spinId);
+        console.log('Spin data:', spinData);
 
-        if (Date.now() > linkData.expiryTime) {
-            activeLinks.delete(req.params.id);
-            return res.json({ 
-                valid: false, 
-                message: 'ลิงก์หมดอายุแล้ว' 
-            });
-        }
-
-        res.json({ 
-            valid: true,
-            expiresIn: Math.floor((linkData.expiryTime - Date.now()) / 1000)
-        });
-    } catch (error) {
-        console.error('Error checking link:', error);
-        res.status(500).json({
-            success: false,
-            error: 'เกิดข้อผิดพลาดในการตรวจสอบลิงก์'
-        });
-    }
-});
-
-app.post('/api/spin/:id', async (req, res) => {
-    try {
-        const linkData = activeLinks.get(req.params.id);
-        
-        if (!linkData) {
-            return res.status(400).json({ 
+        // Validate spin
+        if (!spinData) {
+            console.log('Spin not found');
+            return res.status(400).json({
                 success: false,
-                error: 'ลิงก์ไม่ถูกต้อง' 
+                error: 'ลิงก์ไม่ถูกต้อง'
             });
         }
 
-        if (linkData.used) {
-            return res.status(400).json({ 
+        if (spinData.used) {
+            console.log('Spin already used');
+            return res.status(400).json({
                 success: false,
-                error: 'ลิงก์นี้ถูกใช้งานไปแล้ว',
-                usedAt: linkData.usedAt,
-                prize: linkData.prize 
+                error: 'ลิงก์นี้ถูกใช้งานไปแล้ว'
             });
         }
 
-        if (Date.now() > linkData.expiryTime) {
-            activeLinks.delete(req.params.id);
-            return res.status(400).json({ 
+        if (Date.now() > spinData.expiryTime) {
+            console.log('Spin expired');
+            activeSpins.delete(spinId);
+            return res.status(400).json({
                 success: false,
-                error: 'ลิงก์หมดอายุแล้ว' 
+                error: 'ลิงก์หมดอายุแล้ว'
             });
         }
 
+        // Prize list with weights
         const prizes = [
-            { name: 'เลือกได้ทั้งร้าน 1 เมนู', probability: 5 },
-            { name: 'ลด 30 บาท', probability: 10 },
-            { name: 'ลด 10%', probability: 15 },
-            { name: 'ลด 5%', probability: 15 },
-            { name: 'ลด 3%', probability: 15 },
-            { name: 'ฟรีวิป 1 จุก', probability: 10 },
-            { name: 'ฟรีมุก 1 ตัก', probability: 10 },
-            { name: 'ฟรีชาเขียว', probability: 10 },
-            { name: 'ฟรีชาไทย', probability: 5 },
-            { name: 'ฟรีชามะนาว', probability: 5 }
+            { name: 'เลือกได้ทั้งร้าน 1 เมนู', weight: 5 },
+            { name: 'ลด 30 บาท', weight: 10 },
+            { name: 'ลด 10%', weight: 15 },
+            { name: 'ลด 5%', weight: 15 },
+            { name: 'ลด 3%', weight: 15 },
+            { name: 'ฟรีวิป 1 จุก', weight: 10 },
+            { name: 'ฟรีมุก 1 ตัก', weight: 10 },
+            { name: 'ฟรีชาเขียว', weight: 10 },
+            { name: 'ฟรีชาไทย', weight: 5 },
+            { name: 'ฟรีชามะนาว', weight: 5 }
         ];
 
-        // Weighted random selection
-        const totalProbability = prizes.reduce((sum, prize) => sum + prize.probability, 0);
-        let random = Math.random() * totalProbability;
-        let selectedPrize = prizes[prizes.length - 1].name; // Default to last prize
+        // Select random prize with weights
+        const totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
+        let random = Math.random() * totalWeight;
+        let selectedPrize = prizes[prizes.length - 1].name;
 
         for (const prize of prizes) {
-            if (random < prize.probability) {
+            if (random < prize.weight) {
                 selectedPrize = prize.name;
                 break;
             }
-            random -= prize.probability;
+            random -= prize.weight;
         }
 
-        // Update link data
-        linkData.used = true;
-        linkData.prize = selectedPrize;
-        linkData.usedAt = new Date();
+        console.log(`Selected prize: ${selectedPrize}`);
+
+        // Update spin data
+        spinData.used = true;
+        spinData.prize = selectedPrize;
+        spinData.usedAt = new Date();
+        activeSpins.set(spinId, spinData);
 
         res.json({
             success: true,
-            prize: selectedPrize,
-            message: 'สุ่มรางวัลสำเร็จ'
+            prize: selectedPrize
         });
 
     } catch (error) {
-        console.error('Error spinning wheel:', error);
+        console.error('Spin error:', error);
         res.status(500).json({
             success: false,
             error: 'เกิดข้อผิดพลาดในการสุ่มรางวัล'
@@ -189,62 +150,64 @@ app.post('/api/spin/:id', async (req, res) => {
     }
 });
 
-// Admin routes
-app.get('/api/admin/links', (req, res) => {
+// Validate spin link
+app.get('/api/validate-spin/:id', (req, res) => {
     try {
-        const linksData = Array.from(activeLinks.entries()).map(([id, data]) => ({
-            id,
-            ...data,
-            isExpired: Date.now() > data.expiryTime
-        }));
-
-        res.json({
-            success: true,
-            links: linksData
-        });
-    } catch (error) {
-        console.error('Error fetching links:', error);
-        res.status(500).json({
-            success: false,
-            error: 'เกิดข้อผิดพลาดในการดึงข้อมูลลิงก์'
-        });
-    }
-});
-
-// Clean up expired links periodically
-setInterval(() => {
-    try {
-        const now = Date.now();
-        let deletedCount = 0;
+        const spinId = req.params.id;
+        console.log(`Validating spin ID: ${spinId}`);
         
-        for (const [id, data] of activeLinks.entries()) {
-            if (now > data.expiryTime) {
-                activeLinks.delete(id);
-                deletedCount++;
-            }
+        const spinData = activeSpins.get(spinId);
+        console.log('Validation data:', spinData);
+
+        if (!spinData) {
+            return res.json({
+                valid: false,
+                error: 'ลิงก์ไม่ถูกต้อง'
+            });
         }
 
-        if (deletedCount > 0) {
-            console.log(`Cleaned up ${deletedCount} expired links`);
+        if (spinData.used) {
+            return res.json({
+                valid: false,
+                error: 'ลิงก์นี้ถูกใช้งานไปแล้ว'
+            });
         }
+
+        if (Date.now() > spinData.expiryTime) {
+            activeSpins.delete(spinId);
+            return res.json({
+                valid: false,
+                error: 'ลิงก์หมดอายุแล้ว'
+            });
+        }
+
+        res.json({ valid: true });
+        
     } catch (error) {
-        console.error('Error cleaning up expired links:', error);
+        console.error('Validation error:', error);
+        res.status(500).json({
+            valid: false,
+            error: 'เกิดข้อผิดพลาดในการตรวจสอบลิงก์'
+        });
     }
-}, 60000); // Run every minute
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์'
-    });
 });
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, 'public', 'error.html'));
-});
+// Clean up expired spins
+setInterval(() => {
+    const now = Date.now();
+    let cleanupCount = 0;
+    
+    for (const [id, data] of activeSpins.entries()) {
+        if (now > data.expiryTime) {
+            activeSpins.delete(id);
+            cleanupCount++;
+        }
+    }
+    
+    if (cleanupCount > 0) {
+        console.log(`Cleaned up ${cleanupCount} expired spins`);
+    }
+}, 60000);
 
 // Start server
 const PORT = process.env.PORT || 3000;

@@ -3,143 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สุ่มรางวัล</title>
-    <style>
-        body {
-            font-family: 'Kanit', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f2f5;
-        }
-
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .wheel-container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 2rem auto;
-        }
-
-        #spinButton {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: background 0.3s;
-        }
-
-        #spinButton:hover {
-            background: #45a049;
-        }
-
-        #spinButton:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-
-        .result {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: #e8f5e9;
-            border-radius: 6px;
-            display: none;
-        }
-
-        .error {
-            color: #d32f2f;
-            margin-top: 1rem;
-        }
-    </style>
+    <meta name="description" content="ร่วมสนุกกับการสุ่มรางวัลพิเศษจาก KAMNUAN TECH">
+    <title>สุ่มรางวัลพิเศษ | KAMNUAN TECH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/spin.css">
 </head>
 <body>
     <div class="container">
-        <h1>สุ่มรางวัล</h1>
-        <div class="wheel-container">
-            <canvas id="wheelCanvas" width="300" height="300"></canvas>
+        <div class="card">
+            <!-- Header Section -->
+            <div class="card-header">
+                <h1 class="title">สุ่มรางวัลพิเศษ</h1>
+                <p class="subtitle">ลุ้นรับรางวัลมากมาย!</p>
+            </div>
+
+            <!-- Prize Wheel Section -->
+            <div class="wheel-section">
+                <div class="wheel-container">
+                    <div class="pointer"></div>
+                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                    <div class="wheel-center"></div>
+                </div>
+
+                <!-- Spin Button -->
+                <button id="spinButton" class="button button-primary">
+                    <span class="button-text">สุ่มรางวัล</span>
+                    <span class="button-loading" style="display: none;">กำลังสุ่ม...</span>
+                </button>
+            </div>
+
+            <!-- Result Section -->
+            <div id="prizeResult" class="prize-result">
+                <div class="result-content">
+                    <h2 class="result-header">🎉 ยินดีด้วย!</h2>
+                    <div id="prizeName" class="prize-name"></div>
+                    <p class="result-instruction">
+                        กรุณาแสดงหน้าจอนี้กับพนักงานเพื่อรับรางวัล
+                    </p>
+                    <div class="result-timestamp">
+                        รางวัลนี้ถูกสุ่มเมื่อ: <span id="timestamp"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message">
+                <div class="error-content"></div>
+                <button onclick="window.location.reload()" class="button button-secondary">
+                    ลองใหม่อีกครั้ง
+                </button>
+            </div>
         </div>
-        <button id="spinButton">สุ่มรางวัล</button>
-        <div id="result" class="result"></div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 KAMNUAN TECH. All rights reserved.</p>
+            </div>
+        </footer>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>กำลังโหลด...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/spin.js"></script>
+    
+    <!-- Prevent form resubmission on refresh -->
     <script>
-        const wheel = {
-            canvas: document.getElementById('wheelCanvas'),
-            ctx: null,
-            spinning: false,
-            
-            init() {
-                this.ctx = this.canvas.getContext('2d');
-                this.draw();
-            },
-
-            draw() {
-                // โค้ดการวาดวงล้อ (เหมือนเดิม)
-            },
-
-            spin() {
-                if (this.spinning) return;
-                this.spinning = true;
-                
-                const spinButton = document.getElementById('spinButton');
-                spinButton.disabled = true;
-
-                // ดึง ID จาก URL
-                const urlParts = window.location.pathname.split('/');
-                const spinId = urlParts[urlParts.length - 1];
-
-                // เรียก API เพื่อสุ่มรางวัล
-                fetch(`/api/spin/${spinId}`, {
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        throw new Error(data.error);
-                    }
-
-                    // แสดงผลรางวัล
-                    setTimeout(() => {
-                        const result = document.getElementById('result');
-                        result.textContent = `ยินดีด้วย! คุณได้รับ: ${data.prize}`;
-                        result.style.display = 'block';
-                        this.spinning = false;
-                    }, 3000);
-                })
-                .catch(error => {
-                    const result = document.getElementById('result');
-                    result.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
-                    result.style.display = 'block';
-                    result.className = 'result error';
-                    spinButton.disabled = true;
-                    this.spinning = false;
-                });
-            }
-        };
-
-        // เริ่มต้นวงล้อ
-        wheel.init();
-
-        // เพิ่ม event listener สำหรับปุ่มสุ่ม
-        document.getElementById('spinButton').addEventListener('click', () => {
-            wheel.spin();
-        });
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
     </script>
 </body>
 </html>

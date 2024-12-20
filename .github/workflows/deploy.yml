@@ -1,34 +1,27 @@
-name: Deploy to DirectAdmin
+name: 🚀 Deploy Spin Website
 on:
   push:
     branches: [ main ]
-
 jobs:
-  FTP-Deploy-Action:
+  web-deploy:
     name: 🎉 Deploy
     runs-on: ubuntu-latest
-    
     steps:
     - name: 🚚 Get latest code
       uses: actions/checkout@v3
     
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: 🔨 Install Dependencies
+      run: npm install
+      
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
-        server: kamnuantech.com
-        username: spinkitti@kamnuantech.com
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        protocol: ftps
-        port: 21
         server-dir: /domains/spin.kamnuantech.com/public_html/
-        dangerous-clean-slate: true
-        timeout: 60000
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          **/.env
-          **/package-lock.json
-          **/.htpasswd/**
-          **/private_html/**
-          **/cgi-bin/**

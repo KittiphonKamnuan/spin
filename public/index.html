@@ -1,38 +1,88 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบสุ่มรางวัล</title>
+    <title>ระบบจัดการรางวัล - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <!-- Prize Wheel Section -->
-        <div class="card">
-            <h2 class="card-title">วงล้อสุ่มของรางวัล</h2>
-            <div class="wheel-container">
-                <div class="pointer"></div>
-                <canvas id="wheelCanvas" width="400" height="400"></canvas>
-                <div class="wheel-center"></div>
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <h2 class="login-title">เข้าสู่ระบบ</h2>
+            <div class="input-group">
+                <label for="username">ชื่อผู้ใช้</label>
+                <input type="text" id="username" placeholder="กรุณากรอกชื่อผู้ใช้" autocomplete="off">
             </div>
-            <button id="spinButton" class="button" disabled>สุ่มรางวัล</button>
-            <div id="prizeResult" class="prize-result"></div>
+            <div class="input-group">
+                <label for="password">รหัสผ่าน</label>
+                <input type="password" id="password" placeholder="กรุณากรอกรหัสผ่าน">
+            </div>
+            <button onclick="login()" class="button button-primary" style="width: 100%">เข้าสู่ระบบ</button>
+            <div id="loginError" class="error-message"></div>
         </div>
 
-        <!-- Admin Section -->
-        <div class="card">
-            <h2 class="card-title">ส่วนควบคุมสำหรับเจ้าของร้าน</h2>
-            <button id="generateButton" class="button">สร้างลิงก์ใหม่</button>
-            <div id="linkContainer" class="link-container" style="display: none;">
-                <div id="generatedLink"></div>
-                <div id="timer" class="timer"></div>
-                <div id="qrCode" class="qr-code"></div>
+        <!-- Admin Dashboard -->
+        <div id="adminSection" class="admin-section">
+            <div class="admin-header">
+                <div class="header-left">
+                    <h1 class="admin-title">ระบบจัดการรางวัล</h1>
+                </div>
+                <div class="user-info">
+                    <span id="adminUsername" class="username"></span>
+                    <button onclick="logout()" class="button button-danger">ออกจากระบบ</button>
+                </div>
+            </div>
+
+            <div class="wheel-card">
+                <div class="wheel-header">
+                    <h2>วงล้อสุ่มรางวัล</h2>
+                    <p class="wheel-description">สร้างลิงก์สำหรับให้ลูกค้าสุ่มรางวัล</p>
+                </div>
+
+                <div class="prize-list">
+                    <h3>รายการรางวัล</h3>
+                    <div class="prize-grid">
+                        <div class="prize-item">เลือกได้ทั้งร้าน 1 เมนู</div>
+                        <div class="prize-item">ลด 30 บาท</div>
+                        <div class="prize-item">ลด 10%</div>
+                        <div class="prize-item">ลด 5%</div>
+                        <div class="prize-item">ลด 3%</div>
+                        <div class="prize-item">ฟรีวิป 1 จุก</div>
+                        <div class="prize-item">ฟรีมุก 1 ตัก</div>
+                        <div class="prize-item">ฟรีชาเขียว</div>
+                        <div class="prize-item">ฟรีชาไทย</div>
+                        <div class="prize-item">ฟรีชามะนาว</div>
+                    </div>
+                </div>
+
+                <div class="wheel-container">
+                    <div class="pointer"></div>
+                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                    <div class="wheel-center"></div>
+                </div>
+
+                <div class="controls">
+                    <button id="generateButton" class="button button-primary">สร้างลิงก์ใหม่</button>
+                </div>
+
+                <div id="linkContainer" class="link-section">
+                    <h3 class="link-header">ลิงก์สำหรับลูกค้า</h3>
+                    <div class="link-box">
+                        <div id="generatedLink" class="link-content"></div>
+                        <button onclick="copyLink()" class="button button-secondary">คัดลอกลิงก์</button>
+                    </div>
+                    <div id="timer" class="timer"></div>
+                    <div id="qrCode" class="qr-code"></div>
+                    <p class="link-note">* ลิงก์จะหมดอายุภายใน 5 นาที และสามารถใช้ได้เพียงครั้งเดียว</p>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
