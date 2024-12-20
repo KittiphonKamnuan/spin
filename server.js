@@ -8,7 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public_html'));
-app.use('/spin', express.static('public_html/spin'));
 
 // Store active spins
 const activeSpins = new Map();
@@ -20,11 +19,11 @@ app.get('/', (req, res) => {
 
 app.get('/spin/:id', (req, res) => {
     const spinId = req.params.id;
-    console.log('Accessing spin page:', spinId);
-    res.sendFile(path.join(__dirname, 'public_html', 'spin', 'index.html'));
+    console.log('Accessing wheel page:', spinId);
+    res.sendFile(path.join(__dirname, 'public_html', 'wheel.html'));
 });
 
-// API Routes
+// Generate new link
 app.post('/api/generate-link', async (req, res) => {
     try {
         // Expire old active links
@@ -70,6 +69,7 @@ app.post('/api/generate-link', async (req, res) => {
     }
 });
 
+// Spin wheel and get prize
 app.post('/api/spin/:id', async (req, res) => {
     try {
         const spinId = req.params.id;
@@ -100,7 +100,7 @@ app.post('/api/spin/:id', async (req, res) => {
             });
         }
 
-        // Prize configuration with weights
+        // Prize configuration
         const prizes = [
             { name: 'เลือกได้ทั้งร้าน 1 เมนู', weight: 5 },
             { name: 'ลด 30 บาท', weight: 10 },
@@ -153,6 +153,7 @@ app.post('/api/spin/:id', async (req, res) => {
     }
 });
 
+// Validate spin link
 app.get('/api/validate-spin/:id', async (req, res) => {
     try {
         const spinId = req.params.id;
@@ -194,7 +195,7 @@ app.get('/api/validate-spin/:id', async (req, res) => {
     }
 });
 
-// Clean up expired spins periodically
+// Clean up expired links
 setInterval(() => {
     try {
         const now = Date.now();
@@ -208,25 +209,16 @@ setInterval(() => {
         }
 
         if (cleanupCount > 0) {
-            console.log(`Cleaned up ${cleanupCount} expired spins`);
+            console.log(`Cleaned up ${cleanupCount} expired links`);
         }
     } catch (error) {
         console.error('Error in cleanup:', error);
     }
-}, 60000); // Run every minute
+}, 60000);
 
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`http://localhost:${PORT}`);
-});
-
-// Error handling for uncaught exceptions
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-});
-
-process.on('unhandledRejection', (error) => {
-    console.error('Unhandled Rejection:', error);
 });
